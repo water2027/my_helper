@@ -16,12 +16,14 @@ type bot struct {
 	infoHandlers []InfoHandler
 	templateStr  string
 	messageChan  chan string
+	cancelFunc context.CancelFunc
 }
 
 type BotHandler interface {
 	ReceiveMessage(ctx context.Context)
 	SendMessage(resp string) error
 	Run() error
+	Stop()
 }
 
 func NewBot(webhook string, infoHandlers []InfoHandler, templateStr string) *bot {
@@ -68,6 +70,7 @@ func (b *bot) SendMessage(resp string) error {
 
 func (b *bot) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
+	b.cancelFunc = cancel
 	defer cancel()
 	b.ReceiveMessage(ctx)
 	for message := range b.messageChan {
@@ -78,4 +81,8 @@ func (b *bot) Run() error {
 		}
 	}
 	return nil
+}
+
+func (b *bot) Stop() {
+	b.cancelFunc()
 }

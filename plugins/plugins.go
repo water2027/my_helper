@@ -2,6 +2,10 @@ package plugins
 
 import (
 	"log"
+	"github.com/gin-gonic/gin"
+
+
+	"wx_assistant/router"
 	"wx_assistant/bot"
 )
 
@@ -14,11 +18,14 @@ type Plugin interface {
 type PluginRequired interface {
 	bot.InfoHandler
 	Name() string
-	RegisterHandler() error
 }
 
 type PluginRouteOption interface {
-	RegisterRoutes() error
+	RegisterRoutes(r *gin.Engine) error
+}
+
+type PluginHandlerOption interface {
+	InitHandler() error
 }
 
 func verifyRegisterRoutes(p Plugin) bool {
@@ -26,14 +33,22 @@ func verifyRegisterRoutes(p Plugin) bool {
 	return ok;
 }
 
+func verifyInitHandler(p Plugin) bool {
+	_, ok := p.(PluginHandlerOption)
+	return ok;
+}
+
 func RegisterPlugin(p Plugin){
-	err := p.RegisterHandler()
-	if err != nil {
-		log.Println(err)
-	}
 	handlers = append(handlers, p)
-	if !verifyRegisterRoutes(p) {
-		err = p.(PluginRouteOption).RegisterRoutes()
+	if verifyInitHandler(p) {
+		err := p.(PluginHandlerOption).InitHandler()
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+	if verifyRegisterRoutes(p) {
+		err := p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
 		if err != nil {
 			log.Println(err)
 		}
