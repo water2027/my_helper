@@ -3,7 +3,7 @@ package schedule
 import (
 	"time"
 
-	"wx_assistant/plugins"
+	// "wx_assistant/plugins"
 )
 
 type SchedulePlugin struct {
@@ -30,8 +30,8 @@ func (sp *SchedulePlugin) GetChan() chan string {
 }
 
 func init() {
-	sp := &SchedulePlugin{
-		ScheduleChan: make(chan string),
-	}
-	plugins.RegisterPlugin(sp)
+	// sp := &SchedulePlugin{
+	// 	ScheduleChan: make(chan string),
+	// }
+	// plugins.RegisterPlugin(sp)
 }

@@ -6,17 +6,16 @@ import (
 
 
 	"wx_assistant/router"
-	"wx_assistant/bot"
 )
 
-var handlers []bot.InfoHandler
+var handlers []Plugin
 
 type Plugin interface {
 	PluginRequired
 }
 
 type PluginRequired interface {
-	bot.InfoHandler
+	GetChan() chan string
 	Name() string
 }
 
@@ -41,21 +40,24 @@ func verifyInitHandler(p Plugin) bool {
 func RegisterPlugin(p Plugin){
 	handlers = append(handlers, p)
 	if verifyInitHandler(p) {
-		err := p.(PluginHandlerOption).InitHandler()
-		if err != nil {
-			log.Println(err)
-		}
-		return
+		log.Println("init handler")
+		go func(){
+			err := p.(PluginHandlerOption).InitHandler()
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 	if verifyRegisterRoutes(p) {
-		err := p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
-		if err != nil {
-			log.Println(err)
-		}
-		return
+		go func(){
+			err := p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 }
 
-func GetHandlers() []bot.InfoHandler {
+func GetHandlers() []Plugin {
 	return handlers
 }

@@ -5,16 +5,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-)
 
-type InfoHandler interface {
-	GetChan() chan string
-}
+	"wx_assistant/plugins"
+)
 
 type bot struct {
 	webhook      string
-	infoHandlers []InfoHandler
-	templateStr  string
+	infoHandlers []plugins.Plugin
 	messageChan  chan string
 	cancelFunc context.CancelFunc
 }
@@ -26,17 +23,17 @@ type BotHandler interface {
 	Stop()
 }
 
-func NewBot(webhook string, infoHandlers []InfoHandler, templateStr string) *bot {
+func NewBot(webhook string, infoHandlers []plugins.Plugin) *bot {
 	return &bot{
 		webhook:      webhook,
 		infoHandlers: infoHandlers,
-		templateStr:  templateStr,
+		messageChan: make(chan string),
 	}
 }
 
 func (b *bot) ReceiveMessage(ctx context.Context) {
 	for _, handler := range b.infoHandlers {
-		go func(ctx context.Context, handler InfoHandler) {
+		go func(ctx context.Context, handler plugins.Plugin) {
 			c := handler.GetChan()
 			for {
 				select {
@@ -73,14 +70,20 @@ func (b *bot) Run() error {
 	b.cancelFunc = cancel
 	defer cancel()
 	b.ReceiveMessage(ctx)
-	for message := range b.messageChan {
-		err := b.SendMessage(message)
-		if err != nil {
-			cancel()
-			return err
+	for {
+		select {
+		case msg, ok := <-b.messageChan:
+			if !ok {
+				return nil
+			}
+			if err := b.SendMessage(msg); err != nil {
+				cancel()
+				return err
+			}
+		case <-ctx.Done():
+			return nil
 		}
 	}
-	return nil
 }
 
 func (b *bot) Stop() {

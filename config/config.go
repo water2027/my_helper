@@ -10,7 +10,6 @@ import (
 
 type Config struct {
 	Webhook      string `yaml:"webhook" json:"webhook"`
-	TemplateStr  string `yaml:"template_str" json:"template_str"`
 }
 
 var BotConfig Config
