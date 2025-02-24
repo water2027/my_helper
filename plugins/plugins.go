@@ -20,7 +20,7 @@ type PluginRequired interface {
 }
 
 type PluginRouteOption interface {
-	RegisterRoutes(r *gin.Engine) error
+	RegisterRoutes(r *gin.Engine)
 }
 
 type PluginHandlerOption interface {
@@ -50,10 +50,7 @@ func RegisterPlugin(p Plugin){
 	}
 	if verifyRegisterRoutes(p) {
 		go func(){
-			err := p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
-			if err != nil {
-				log.Println(err)
-			}
+			p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
 		}()
 	}
 }

@@ -42,4 +42,10 @@ func (ss *ScheduleService) AddPage() {
 	
 }
 
-func (ss *ScheduleService) BrowsePage() {}
+func (ss *ScheduleService) GetAllTasks(year int, month time.Month, day int, weekday time.Weekday) ([]Date, error) {
+	tasks, err := ss.DB.GetTask(year, month, day, weekday)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}

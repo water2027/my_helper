@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>Document</title>
+	</head>
+	<body>
+		<form onsubmit="auth(event)">
+			<input
+				id="code"
+				type="text"
+			/>
+			<button type="submit">验证</button>
+		</form>
+
+		<script>
+            document.addEventListener('DOMContentLoaded', async ()=>{
+                const token = localStorage.getItem('token')
+                if(!token) {
+                    useRouter(0)
+                    return
+                }
+                await auth()
+            })
+			let lastPage = `
+		<form onsubmit="auth(event)">
+			<input
+				id="code"
+				type="text"
+			/>
+			<button type="submit">验证</button>
+		</form>
+            `;
+			let curPage = `
+ 		<form onsubmit="auth(event)">
+			<input
+				id="code"
+				type="text"
+			/>
+			<button type="submit">验证</button>
+		</form>
+            `;
+			const useRouter = async (page) => {
+				if (page > 3) {
+					throw new Error('超过了');
+				}
+				lastPage = curPage;
+				switch (page) {
+					case 0:
+						curPage = await toAuthPage();
+						break;
+					case 1:
+						curPage = await toAddPage();
+						break;
+					case 2:
+						curPage = await toBrowsePage();
+						break;
+					case 3:
+						curPage = await showPage();
+						break;
+				}
+                document.body.innerHTML = curPage
+			};
+			const toAuthPage = () => {
+				return `
+    <div>
+        <h2>Authentication</h2>
+        <form onsubmit="auth(event)">
+            <input id="code" type="text" placeholder="Enter authentication code"/>
+            <button type="submit">Verify</button>
+        </form>
+    </div>
+    `;
+			};
+			const toAddPage = () => {
+				return `
+    <div>
+        <h2>Add Schedule</h2>
+        <div>
+            <h3>One-time Schedule</h3>
+            <form onsubmit="addOnce(event)">
+                <input type="number" id="year" placeholder="Year" required/>
+                <input type="number" id="month" placeholder="Month" required/>
+                <input type="number" id="day" placeholder="Day" required/>
+                <input type="number" id="hour" placeholder="Hour" required/>
+                <input type="number" id="minute" placeholder="Minute" required/>
+                <input type="text" id="content" placeholder="Content" required/>
+                <button type="submit">Add One-time</button>
+            </form>
+        </div>
+        <div>
+            <h3>Recurring Schedule</h3>
+            <form onsubmit="addLong(event)">
+                <select id="weekday">
+                    <option value="0">Sunday</option>
+                    <option value="1">Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                </select>
+                <input type="number" id="recurHour" placeholder="Hour" required/>
+                <input type="number" id="recurMinute" placeholder="Minute" required/>
+                <input type="text" id="recurContent" placeholder="Content" required/>
+                <button type="submit">Add Recurring</button>
+            </form>
+        </div>
+        <button onclick="useRouter(3)">Back</button>
+    </div>
+    `;
+			};
+			const toBrowsePage = async () => {
+				const card = (item) => {
+					return `
+    <div class="card" style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+        <h3>${item.content}</h3>
+        <p>Time: ${item.hour}:${item.minute.toString().padStart(2, '0')}</p>
+        ${
+			item.weekday !== undefined
+				? `<p>Weekly on: ${item.weekday}</p>`
+				: `<p>Date: ${item.year}-${item.month}-${item.day}</p>`
+		}
+        <button onclick="deleteTask(${item.id})">Delete</button>
+    </div>
+    `;
+				};
+				const resp = await fetch('/schedule/browse', {
+					method: 'POST',
+					headers: {
+						Authorization: localStorage.getItem('token') | '',
+					},
+					body: JSON.stringify({}),
+				});
+				if (resp.status === 400) {
+					useRouter(0);
+					localStorage.removeItem('token');
+					return;
+				}
+				const dates = await resp.json();
+				if (!(dates instanceof Array)) {
+					return;
+				}
+				let page = `
+                <div>
+                `;
+				for (const item of dates) {
+					page += card(item);
+				}
+				page += `</div>`;
+				return page;
+			};
+			const showPage = () => {
+				return `
+        <div>
+			<button onclick="useRouter(1)">添加</button>
+			<button onclick="useRouter(2)">浏览</button>
+		</div>
+                `;
+			};
+			const auth = async (event) => {
+                if(event) {
+                    event.preventDefault()
+                }
+				const codeInput = document.getElementById('code');
+				const codeValue = codeInput.value;
+
+				const resp = await fetch('/schedule/auth', {
+					headers: {
+						Authorization: codeValue,
+					},
+				});
+				if (resp.status === 200) {
+					localStorage.setItem('token', codeValue);
+					useRouter(3);
+					return;
+				}
+			};
+			const addOnce = async (event) => {
+				event.preventDefault();
+				const data = {
+					year: parseInt(document.getElementById('year').value),
+					month: parseInt(document.getElementById('month').value),
+					day: parseInt(document.getElementById('day').value),
+					hour: parseInt(document.getElementById('hour').value),
+					minute: parseInt(document.getElementById('minute').value),
+					content: document.getElementById('content').value,
+				};
+
+				const resp = await fetch('/schedule/add_once', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: localStorage.getItem('token') || '',
+					},
+					body: JSON.stringify(data),
+				});
+
+				if (resp.status === 200) {
+					useRouter(2);
+				} else if (resp.status === 400) {
+					useRouter(0);
+					localStorage.removeItem('token');
+				}
+			};
+
+			const addLong = async (event) => {
+				event.preventDefault();
+				const data = {
+					weekday: parseInt(document.getElementById('weekday').value),
+					hour: parseInt(document.getElementById('recurHour').value),
+					minute: parseInt(
+						document.getElementById('recurMinute').value
+					),
+					content: document.getElementById('recurContent').value,
+				};
+
+				const resp = await fetch('/schedule/add_long', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: localStorage.getItem('token') || '',
+					},
+					body: JSON.stringify(data),
+				});
+
+				if (resp.status === 200) {
+					useRouter(2);
+				} else if (resp.status === 400) {
+					useRouter(0);
+					localStorage.removeItem('token');
+				}
+			};
+
+			const deleteTask = async (id) => {
+				const resp = await fetch('/schedule/', {
+					method: 'DELETE',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: localStorage.getItem('token') || '',
+					},
+					body: JSON.stringify({ id }),
+				});
+
+				if (resp.status === 200) {
+					useRouter(2);
+				} else if (resp.status === 400) {
+					useRouter(0);
+					localStorage.removeItem('token');
+				}
+			};
+		</script>
+	</body>
+</html>

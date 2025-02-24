@@ -9,10 +9,13 @@ import (
 	"wx_assistant/router"
 
 	_ "wx_assistant/plugins/sse"
+	_ "wx_assistant/plugins/schedule"
 )
 
 func main() {
 	config.InitConfig()
+	r := router.GetRouter()
+	r.LoadHTMLGlob("templates/**/*")
 	infoHandlers := plugins.GetHandlers()
 	for _, handler := range infoHandlers {
 		log.Println(handler.Name(), 1)
@@ -24,6 +27,5 @@ func main() {
 			log.Println(err)
 		}
 	}()
-	r := router.GetRouter()
 	r.Run(":8080")
 }

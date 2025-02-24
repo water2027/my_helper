@@ -12,27 +12,32 @@ func NewScheduleDB() *ScheduleDB {
 	return &ScheduleDB{}
 }
 
-func (sdb *ScheduleDB) GetTask(year, month, day, weekday int) []Date {
+func (sdb *ScheduleDB) GetTask(year int, month time.Month, day int, weekday time.Weekday) ([]Date, error) {
 	var dates []Date
 	db := database.GetMysqlDB()
-	stmt, err := db.Prepare("select * from schedule where year = ? and month = ? and day = ?")
+
+	// 使用 OR 连接“两次查询”的条件，使用 DISTINCT 避免重复记录（根据实际情况选择是否需要 DISTINCT）
+	stmt, err := db.Prepare("SELECT DISTINCT * FROM schedule WHERE (year = ? AND month = ? AND day = ?) OR weekday = ?")
 	if err != nil {
-		return dates
+		return dates, err
 	}
-	rows, err := stmt.Query(year, month, day)
+	defer stmt.Close()
+
+	rows, err := stmt.Query(year, month, day, weekday)
 	if err != nil {
-		return dates
+		return dates, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var date Date
-		err := rows.Scan(&date.Year, &date.Month, &date.Day, &date.Weekday, &date.Hour, &date.Minute, &date.Content)
+		err := rows.Scan(&date.Id, &date.Year, &date.Month, &date.Day, &date.Weekday, &date.Hour, &date.Minute, &date.Content)
 		if err != nil {
-			return dates
+			return dates, err
 		}
 		dates = append(dates, date)
 	}
-	return dates
+	return dates, nil
 }
 
 func (sdb *ScheduleDB) AddOnceTask(year int, month time.Month, day, hour, minute int, content string) error {

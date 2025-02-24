@@ -15,18 +15,18 @@ type ScheduleController interface {
 	AddLong(c *gin.Context)
 	DeleteTask(c *gin.Context)
 
-	AddPage(c *gin.Context)
-	BrowsePage(c *gin.Context)
+	Browse(c *gin.Context)
 }
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCode := c.GetHeader("Authorization")
-		if authCode != "1234" {
-			c.JSON(400, gin.H{})
+		if authCode == "1234" {
+			c.Next()
 			return
 		}
-		c.Next()
+		c.HTML(400, "schedule.html", nil)
+		c.Abort()
 	}
 }
 
@@ -36,8 +36,13 @@ func (sp *SchedulePlugin) RegisterRoutes(r *gin.Engine) {
 	}
 	group := r.Group("/schedule")
 	group.Use(AuthMiddleware())
-	group.GET("/", c.AddPage)
-	group.GET("/browse_page", c.BrowsePage)
+	group.GET("/", func(c *gin.Context) {
+		c.HTML(200, "schedule.html", nil)
+	})
+	group.GET("/browse", c.Browse)
+	group.GET("/auth", func(c *gin.Context) {
+		c.JSON(200, nil)
+	})
 
 	group.POST("/add_once", c.AddOnce)
 	group.POST("/add_long", c.AddLong)
@@ -84,10 +89,18 @@ func (controller *Controller) DeleteTask(c *gin.Context) {
 	c.JSON(200, gin.H{})
 }
 
-func (controller *Controller) AddPage(c *gin.Context) {
-
-}
-
-func (controller *Controller) BrowsePage(c *gin.Context) {
-
+func (controller *Controller) Browse(c *gin.Context) {
+	var date Date
+	c.BindQuery(&date)
+    // 从服务层获取所有任务
+    tasks, err := controller.Service.GetAllTasks(date.Year, date.Month, date.Day, date.Weekday)
+    if err != nil {
+        log.Println("获取任务失败:", err)
+        c.JSON(500, gin.H{"error": "无法获取任务列表"})
+        return
+    }
+    // 渲染浏览页面，并传递任务数据，假设模板位于 templates/schedule/browse.html
+    c.HTML(200, "schedule/browse.html", gin.H{
+        "Tasks": tasks,
+    })
 }
