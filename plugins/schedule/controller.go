@@ -1,6 +1,8 @@
 package schedule
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,14 +47,41 @@ func (sp *SchedulePlugin) RegisterRoutes(r *gin.Engine) {
 
 func (controller *Controller) AddOnce(c *gin.Context) {
 	// AddOnce
+	var date Date
+	c.BindJSON(&date)
+	err := controller.Service.AddOnce(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Content)
+	if err != nil {
+		log.Println(err)
+		c.JSON(400, gin.H{})
+		return
+	}
+	c.JSON(200, gin.H{})
 }
 
 func (controller *Controller) AddLong(c *gin.Context) {
-
+	// AddLong
+	var date Date
+	c.BindJSON(&date)
+	err := controller.Service.AddLong(date.Hour, date.Minute, date.Weekday, date.Content)
+	if err != nil {
+		log.Println(err)
+		c.JSON(400, gin.H{})
+		return
+	}
+	c.JSON(200, gin.H{})
 }
 
 func (controller *Controller) DeleteTask(c *gin.Context) {
-
+	// DeleteTask
+	var date Date
+	c.BindJSON(&date)
+	err := controller.Service.DeleteTask(date.Id)
+	if err != nil {
+		log.Println(err)
+		c.JSON(400, gin.H{})
+		return
+	}
+	c.JSON(200, gin.H{})
 }
 
 func (controller *Controller) AddPage(c *gin.Context) {

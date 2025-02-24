@@ -11,6 +11,7 @@ type SchedulePlugin struct {
 }
 
 type Date struct {
+	Id       int            `json:"id"`
 	Year     int            `json:"year"`
 	Month    time.Month     `json:"month"`
 	Day      int            `json:"day"`
