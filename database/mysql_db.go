@@ -20,10 +20,6 @@ func GetMysqlDB() *sql.DB {
 	return db
 }
 
-func initTable() error {
-	return nil
-}
-
 func initMysqlDB() error {
 	var err error
 	once.Do(func() {
@@ -40,10 +36,6 @@ func initMysqlDB() error {
 		}
 
 		err = db.Ping()
-		if err != nil {
-			return
-		}
-		err = initTable()
 		if err != nil {
 			return
 		}

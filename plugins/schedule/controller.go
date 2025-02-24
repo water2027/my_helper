@@ -4,11 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Controller struct{}
+type Controller struct{
+	Service ScheduleService
+}
 
 type ScheduleController interface {
 	AddOnce(c *gin.Context)
 	AddLong(c *gin.Context)
+	DeleteTask(c *gin.Context)
 
 	AddPage(c *gin.Context)
 	BrowsePage(c *gin.Context)
@@ -26,12 +29,18 @@ func AuthMiddleware() gin.HandlerFunc {
 }
 
 func (sp *SchedulePlugin) RegisterRoutes(r *gin.Engine) {
-	c := &Controller{}
-	r.Use(AuthMiddleware())
-	r.POST("/schedule/add_once", c.AddOnce)
-	r.POST("/schedule/add_long", c.AddLong)
-	r.GET("/schedule/add_page", c.AddPage)
-	r.GET("/schedule/browse_page", c.BrowsePage)
+	c := &Controller{
+		Service: *NewScheduleService(),
+	}
+	group := r.Group("/schedule")
+	group.Use(AuthMiddleware())
+	group.GET("/", c.AddPage)
+	group.GET("/browse_page", c.BrowsePage)
+
+	group.POST("/add_once", c.AddOnce)
+	group.POST("/add_long", c.AddLong)
+	
+	group.DELETE("/", c.DeleteTask)
 }
 
 func (controller *Controller) AddOnce(c *gin.Context) {
@@ -42,6 +51,10 @@ func (controller *Controller) AddLong(c *gin.Context) {
 
 }
 
+func (controller *Controller) DeleteTask(c *gin.Context) {
+
+}
+
 func (controller *Controller) AddPage(c *gin.Context) {
 
 }
@@ -49,4 +62,3 @@ func (controller *Controller) AddPage(c *gin.Context) {
 func (controller *Controller) BrowsePage(c *gin.Context) {
 
 }
-
