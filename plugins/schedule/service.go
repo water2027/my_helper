@@ -19,6 +19,20 @@ func (ss *ScheduleService) AddOnce(year int, month time.Month, day, hour, minute
 	if err != nil {
 		return err
 	}
+	now := time.Now()
+	curYear := now.Year()
+	curMonth := now.Month()
+	curDay := now.Day()
+	if year == curYear && month == curMonth && day == curDay {
+		sp.SetTask(Date{
+			Year:year,
+			Month: month,
+			Day: day,
+			Hour: hour,
+			Minute: minute,
+			Content: content,
+		})
+	}
 	return nil
 }
 
@@ -26,6 +40,15 @@ func (ss *ScheduleService) AddLong(hour, minute int, weekday time.Weekday, conte
 	err := ss.DB.AddLongTask(hour, minute, weekday, content)
 	if err != nil {
 		return err
+	}
+	now := time.Now()
+	if now.Weekday() == weekday {
+		sp.SetTask(Date{
+			Weekday: weekday,
+			Hour: hour,
+			Minute: minute,
+			Content: content,
+		})
 	}
 	return nil
 }

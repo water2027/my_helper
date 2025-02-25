@@ -167,6 +167,7 @@
             <h3>Recurring Schedule</h3>
             <form onsubmit="searchDate(event)">
                 <select id="weekday">
+                    <option value="-1">    </option>
                     <option value="0">星期天</option>
                     <option value="1">星期一</option>
                     <option value="2">星期二</option>
@@ -282,7 +283,12 @@
 						'Content-Type': 'application/json',
 						Authorization: localStorage.getItem('token') | '',
 					},
-					body: JSON.stringify(data),
+					body: JSON.stringify({
+						year: data.year ? data.year : -1,
+						month: data.month ? data.month : -1,
+						day: data.day ? data.day : -1,
+						weekday: data.weekday,
+					}),
 				});
 				if (resp.status === 401) {
 					localStorage.removeItem('token');

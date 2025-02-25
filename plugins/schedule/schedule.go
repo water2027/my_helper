@@ -23,7 +23,6 @@ type Date struct {
 	Month    time.Month     `json:"month"`
 	Day      int            `json:"day"`
 	Weekday  time.Weekday   `json:"weekday"`
-	Weekdays []time.Weekday `json:"weekdays"`
 	Hour     int            `json:"hour"`
 	Minute   int            `json:"minute"`
 	Content  string         `json:"content"`
@@ -31,6 +30,23 @@ type Date struct {
 
 func (sp *SchedulePlugin) Name() string {
 	return "日程安排"
+}
+
+func (sp *SchedulePlugin) SetTask(date Date) {
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+	day := now.Day()
+	go func() {
+		utils.SetOnceTask(func() {
+			sp.ScheduleChan <- date.Content
+		}, year, month, day, date.Hour, date.Minute)
+		database.DeleteValue(context.Background(), strconv.Itoa(date.Id))
+		if date.Weekday != -1 {
+			ss := NewScheduleService()
+			ss.DeleteTask(date.Id)
+		}
+	}()
 }
 
 func (sp *SchedulePlugin) GetChan() chan string {
@@ -109,9 +125,10 @@ func (sp *SchedulePlugin) InitHandler() {
 	sp.Run()
 }
 
+var sp = &SchedulePlugin{
+	ScheduleChan: make(chan string),
+}
+
 func init() {
-	sp := &SchedulePlugin{
-		ScheduleChan: make(chan string),
-	}
 	plugins.RegisterPlugin(sp)
 }
