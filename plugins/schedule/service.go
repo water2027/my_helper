@@ -41,7 +41,9 @@ func (ss *ScheduleService) AddLong(hour, minute int, weekday time.Weekday, conte
 	if err != nil {
 		return err
 	}
+
 	now := time.Now()
+	
 	if now.Weekday() == weekday {
 		eventEmitter.Emit("SetTask", Date{
 			Weekday: weekday,

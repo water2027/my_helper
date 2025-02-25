@@ -8,7 +8,7 @@ import (
 
 	"wx_assistant/plugins"
 	"wx_assistant/plugins/sse/sseapi"
-	"wx_assistant/utils"
+	// "wx_assistant/utils"
 )
 
 type SsePlugin struct {
@@ -21,15 +21,15 @@ type PostHandler interface {
 }
 
 func (pc *SsePlugin) InitHandler() {
-	log.Println("SSE plugin init")
-	utils.SetOnceTask(func() {
+	// utils.SetOnceTask(func() {
 		posts := sseapi.GetPosts()
 		slices.Reverse(posts)
 		for _, post := range posts {
 			msg := fmt.Sprintf("%s, https://ssemarket.cn/postdetail/%d", post.Title, post.PostID)
+			log.Println(msg)
 			pc.PostChan <- msg
 		}
-	}, 2025, 2, 24, 9, 29)
+	// }, 2025, 2, 25, 23, 18)
 }
 
 func (pc *SsePlugin) Name() string {

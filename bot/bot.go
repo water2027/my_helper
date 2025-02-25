@@ -33,8 +33,9 @@ func NewBot(webhook string, infoHandlers []plugins.PluginHandlerOption) *bot {
 
 func (b *bot) ReceiveMessage(ctx context.Context) {
 	for _, handler := range b.infoHandlers {
-		go func(ctx context.Context, handler plugins.PluginHandlerOption) {
-			c := handler.GetChan()
+		h := handler.(plugins.Plugin)
+		go func(ctx context.Context) {
+			c := h.(plugins.PluginHandlerOption).GetChan()
 			for {
 				select {
 				case msg := <-c:
@@ -47,7 +48,7 @@ func (b *bot) ReceiveMessage(ctx context.Context) {
 					}
 				}
 			}
-		}(ctx, handler)
+		}(ctx)
 	}
 }
 
@@ -89,3 +90,5 @@ func (b *bot) Run() error {
 func (b *bot) Stop() {
 	b.cancelFunc()
 }
+
+

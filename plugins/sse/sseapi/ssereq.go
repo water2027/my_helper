@@ -21,7 +21,7 @@ func loginSSEReq() (*http.Request, error) {
 
 func getPostsReq() (*http.Request, error) {
 	//get posts
-	getPostsData := fmt.Sprintf(`{"limit":5,"offset":0,"partition":"主页","searchsort":"home","userTelephone":"%s"}`, "123456")
+	getPostsData := fmt.Sprintf(`{"limit":5,"offset":0,"partition":"主页","searchsort":"home","userTelephone":"%s"}`, "123")
 	req, err := http.NewRequest("POST", "https://ssemarket.cn/api/auth/browse", bytes.NewBuffer([]byte(getPostsData)))
 	if err != nil {
 		log.Println(err)

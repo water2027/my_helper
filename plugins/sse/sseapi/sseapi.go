@@ -64,10 +64,12 @@ func GetPosts() []Post {
 		return []Post{}
 	}
 
-	if loginResponse.Code == 200 {
-		// 将token添加到第二个请求的header中
-		req.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
+	if loginResponse.Code != 200 {
+		log.Println(loginResponse.Msg)
+		return []Post{}
 	}
+	// 将token添加到第二个请求的header中
+	req.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
 
 	defer loginResp.Body.Close()
 

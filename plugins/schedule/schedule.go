@@ -18,14 +18,14 @@ type SchedulePlugin struct {
 }
 
 type Date struct {
-	Id       int            `json:"id"`
-	Year     int            `json:"year"`
-	Month    time.Month     `json:"month"`
-	Day      int            `json:"day"`
-	Weekday  time.Weekday   `json:"weekday"`
-	Hour     int            `json:"hour"`
-	Minute   int            `json:"minute"`
-	Content  string         `json:"content"`
+	Id      int          `json:"id"`
+	Year    int          `json:"year"`
+	Month   time.Month   `json:"month"`
+	Day     int          `json:"day"`
+	Weekday time.Weekday `json:"weekday"`
+	Hour    int          `json:"hour"`
+	Minute  int          `json:"minute"`
+	Content string       `json:"content"`
 }
 
 func (sp *SchedulePlugin) Name() string {
@@ -73,6 +73,18 @@ func initTable() {
 
 func (sp *SchedulePlugin) startDailyTask() {
 	database.ClearAll(context.Background())
+	for {
+		select {
+		case str, ok := <-sp.ScheduleChan:
+			log.Println("clear", str)
+			if !ok {
+				return
+			}
+		default:
+			goto ProcessTasks
+		}
+	}
+ProcessTasks:
 	// 取出今日的日程
 	ss := NewScheduleService()
 	now := time.Now()
@@ -125,7 +137,7 @@ func (sp *SchedulePlugin) InitHandler() {
 	sp.Run()
 }
 
-var eventEmitter = plugins.NewEventEmitter()
+var eventEmitter = *plugins.NewEventEmitter()
 
 func init() {
 	sp := &SchedulePlugin{
