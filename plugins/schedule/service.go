@@ -24,7 +24,7 @@ func (ss *ScheduleService) AddOnce(year int, month time.Month, day, hour, minute
 	curMonth := now.Month()
 	curDay := now.Day()
 	if year == curYear && month == curMonth && day == curDay {
-		sp.SetTask(Date{
+		eventEmitter.Emit("SetTask", Date{
 			Year:year,
 			Month: month,
 			Day: day,
@@ -43,7 +43,7 @@ func (ss *ScheduleService) AddLong(hour, minute int, weekday time.Weekday, conte
 	}
 	now := time.Now()
 	if now.Weekday() == weekday {
-		sp.SetTask(Date{
+		eventEmitter.Emit("SetTask", Date{
 			Weekday: weekday,
 			Hour: hour,
 			Minute: minute,

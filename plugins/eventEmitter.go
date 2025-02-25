@@ -23,7 +23,7 @@ func NewEventEmitter() *EventEmitter {
 func (ee *EventEmitter) On(eventName string, listenerName string, listener func(...interface{})) {
 	ee.mutex.Lock()
 	defer ee.mutex.Unlock()
-
+	
 	listeners, ok := ee.listeners[eventName]
 	if !ok {
 		// 如果没有这个事件，就创建一个
@@ -37,7 +37,7 @@ func (ee *EventEmitter) On(eventName string, listenerName string, listener func(
 func (ee *EventEmitter) Off(eventName string, listenerName string) {
 	ee.mutex.Lock()
 	defer ee.mutex.Unlock()
-
+	
 	if listeners, ok := ee.listeners[eventName]; ok {
 		delete(listeners, listenerName)
 	}
@@ -47,7 +47,7 @@ func (ee *EventEmitter) Off(eventName string, listenerName string) {
 func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
 	ee.mutex.RLock()
 	defer ee.mutex.RUnlock()
-
+	
 	listeners, ok := ee.listeners[eventName]
 	if ok {
 		for _, listener := range listeners {
@@ -55,7 +55,9 @@ func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
 			func(l func(...interface{})) {
 				defer func() {
 					if r := recover(); r != nil {
-						log.Println("Recovered in EventEmitter.Emit:", r)
+						// 这里可以添加日志记录或其他处理
+						// fmt.Printf("Event listener panic: %v\n", r)
+						log.Printf("Event listener panic: %v\n", r)
 					}
 				}()
 				l(args...)
@@ -68,7 +70,7 @@ func (ee *EventEmitter) Emit(eventName string, args ...interface{}) {
 func (ee *EventEmitter) HasListeners(eventName string) bool {
 	ee.mutex.RLock()
 	defer ee.mutex.RUnlock()
-
+	
 	listeners, ok := ee.listeners[eventName]
 	return ok && len(listeners) > 0
 }

@@ -125,10 +125,20 @@ func (sp *SchedulePlugin) InitHandler() {
 	sp.Run()
 }
 
-var sp = &SchedulePlugin{
-	ScheduleChan: make(chan string),
-}
+var eventEmitter = plugins.NewEventEmitter()
 
 func init() {
+	sp := &SchedulePlugin{
+		ScheduleChan: make(chan string),
+	}
 	plugins.RegisterPlugin(sp)
+	eventEmitter.On("SetTask", "SetTask", func(i ...interface{}) {
+		if len(i) < 1 {
+			return
+		}
+		date, ok := i[0].(Date)
+		if ok {
+			sp.SetTask(date)
+		}
+	})
 }
