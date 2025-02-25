@@ -35,3 +35,7 @@ func DeleteValue(ctx context.Context, key string) error {
 	return client.Del(ctx, key).Err()
 }
 
+func ClearAll(ctx context.Context) error {
+	return client.FlushAll(ctx).Err()
+}
+

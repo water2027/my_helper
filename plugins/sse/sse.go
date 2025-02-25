@@ -20,7 +20,7 @@ type PostHandler interface {
 	GetChan() *chan sseapi.Post
 }
 
-func (pc *SsePlugin) InitHandler() error {
+func (pc *SsePlugin) InitHandler() {
 	log.Println("SSE plugin init")
 	utils.SetOnceTask(func() {
 		posts := sseapi.GetPosts()
@@ -30,7 +30,6 @@ func (pc *SsePlugin) InitHandler() error {
 			pc.PostChan <- msg
 		}
 	}, 2025, 2, 24, 9, 29)
-	return nil
 }
 
 func (pc *SsePlugin) Name() string {

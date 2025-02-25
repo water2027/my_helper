@@ -1,10 +1,16 @@
 package database
 
-func InitDatabase() error {
-	err := initMysqlDB()
-	if err != nil {
-		return err
-	}
+import (
+	// "github.com/joho/godotenv"
+	// "log"
+)
+
+func init() {
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+	initMysqlDB()
 	initRedisClient()
-	return nil
 }

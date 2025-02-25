@@ -24,7 +24,7 @@ type PluginRouteOption interface {
 }
 
 type PluginHandlerOption interface {
-	InitHandler() error
+	InitHandler()
 }
 
 func verifyRegisterRoutes(p Plugin) bool {
@@ -42,10 +42,7 @@ func RegisterPlugin(p Plugin){
 	if verifyInitHandler(p) {
 		log.Println("init handler")
 		go func(){
-			err := p.(PluginHandlerOption).InitHandler()
-			if err != nil {
-				log.Println(err)
-			}
+			p.(PluginHandlerOption).InitHandler()
 		}()
 	}
 	if verifyRegisterRoutes(p) {

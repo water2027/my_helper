@@ -38,10 +38,6 @@ func (ss *ScheduleService) DeleteTask(id int) error {
 	return nil
 }
 
-func (ss *ScheduleService) AddPage() {
-	
-}
-
 func (ss *ScheduleService) GetAllTasks(year int, month time.Month, day int, weekday time.Weekday) ([]Date, error) {
 	tasks, err := ss.DB.GetTask(year, month, day, weekday)
 	if err != nil {

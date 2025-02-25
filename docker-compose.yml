@@ -8,13 +8,16 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: root
       MYSQL_PASSWORD: example
-      MYSQL_DB: mydatabase
+      MYSQL_DB: wx_assistant
+      MYSQL_PORT: 3306
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # REDIS_PASSWORD: 
@@ -23,9 +26,14 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: mydatabase
+      MYSQL_DATABASE: wx_assistant
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
 

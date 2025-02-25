@@ -7,9 +7,10 @@ import (
 	"wx_assistant/config"
 	"wx_assistant/plugins"
 	"wx_assistant/router"
-
-	_ "wx_assistant/plugins/sse"
+	
+	_ "wx_assistant/database"
 	_ "wx_assistant/plugins/schedule"
+	_ "wx_assistant/plugins/sse"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 		log.Println(handler.Name(), 1)
 	}
 	b := bot.NewBot(config.BotConfig.Webhook, infoHandlers)
-	go func(){
+	go func() {
 		err := b.Run()
 		if err != nil {
 			log.Println(err)

@@ -18,37 +18,19 @@
 		</form>
 
 		<script>
-            document.addEventListener('DOMContentLoaded', async ()=>{
-                const token = localStorage.getItem('token')
-                if(!token) {
-                    useRouter(0)
-                    return
-                }
-                await auth()
-            })
-			let lastPage = `
-		<form onsubmit="auth(event)">
-			<input
-				id="code"
-				type="text"
-			/>
-			<button type="submit">验证</button>
-		</form>
-            `;
-			let curPage = `
- 		<form onsubmit="auth(event)">
-			<input
-				id="code"
-				type="text"
-			/>
-			<button type="submit">验证</button>
-		</form>
-            `;
+			let curPage = '';
+			document.addEventListener('DOMContentLoaded', async () => {
+				const token = localStorage.getItem('token');
+				if (!token) {
+					useRouter(0);
+					return;
+				}
+				await auth();
+			});
 			const useRouter = async (page) => {
 				if (page > 3) {
 					throw new Error('超过了');
 				}
-				lastPage = curPage;
 				switch (page) {
 					case 0:
 						curPage = await toAuthPage();
@@ -57,13 +39,13 @@
 						curPage = await toAddPage();
 						break;
 					case 2:
-						curPage = await toBrowsePage();
+						curPage = await searchPage();
 						break;
 					case 3:
 						curPage = await showPage();
 						break;
 				}
-                document.body.innerHTML = curPage
+				document.body.innerHTML = curPage;
 			};
 			const toAuthPage = () => {
 				return `
@@ -96,13 +78,13 @@
             <h3>Recurring Schedule</h3>
             <form onsubmit="addLong(event)">
                 <select id="weekday">
-                    <option value="0">Sunday</option>
-                    <option value="1">Monday</option>
-                    <option value="2">Tuesday</option>
-                    <option value="3">Wednesday</option>
-                    <option value="4">Thursday</option>
-                    <option value="5">Friday</option>
-                    <option value="6">Saturday</option>
+                    <option value="0">星期天</option>
+                    <option value="1">星期一</option>
+                    <option value="2">星期二</option>
+                    <option value="3">星期三</option>
+                    <option value="4">星期四</option>
+                    <option value="5">星期五</option>
+                    <option value="6">星期六</option>
                 </select>
                 <input type="number" id="recurHour" placeholder="Hour" required/>
                 <input type="number" id="recurMinute" placeholder="Minute" required/>
@@ -114,7 +96,25 @@
     </div>
     `;
 			};
-			const toBrowsePage = async () => {
+			const toBrowsePage = (dates) => {
+				const weekdayTransfer = (weekday) => {
+					switch (weekday) {
+						case 0:
+							return '星期天';
+						case 1:
+							return '星期一';
+						case 2:
+							return '星期二';
+						case 3:
+							return '星期三';
+						case 4:
+							return '星期四';
+						case 5:
+							return '星期五';
+						case 6:
+							return '星期六';
+					}
+				};
 				const card = (item) => {
 					return `
     <div class="card" style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
@@ -122,26 +122,14 @@
         <p>Time: ${item.hour}:${item.minute.toString().padStart(2, '0')}</p>
         ${
 			item.weekday !== undefined
-				? `<p>Weekly on: ${item.weekday}</p>`
+				? `<p>Weekly on: ${weekdayTransfer(item.weekday)}</p>`
 				: `<p>Date: ${item.year}-${item.month}-${item.day}</p>`
 		}
         <button onclick="deleteTask(${item.id})">Delete</button>
     </div>
     `;
 				};
-				const resp = await fetch('/schedule/browse', {
-					method: 'POST',
-					headers: {
-						Authorization: localStorage.getItem('token') | '',
-					},
-					body: JSON.stringify({}),
-				});
-				if (resp.status === 400) {
-					useRouter(0);
-					localStorage.removeItem('token');
-					return;
-				}
-				const dates = await resp.json();
+
 				if (!(dates instanceof Array)) {
 					return;
 				}
@@ -162,10 +150,42 @@
 		</div>
                 `;
 			};
+			const searchPage = () => {
+				return `
+    <div>
+        <h2>Add Schedule</h2>
+        <div>
+            <h3>One-time Schedule</h3>
+            <form onsubmit="searchDate(event)">
+                <input type="number" id="year" placeholder="Year" required/>
+                <input type="number" id="month" placeholder="Month" required/>
+                <input type="number" id="day" placeholder="Day" required/>
+                <button type="submit">Search One-time</button>
+            </form>
+        </div>
+        <div>
+            <h3>Recurring Schedule</h3>
+            <form onsubmit="searchDate(event)">
+                <select id="weekday">
+                    <option value="0">星期天</option>
+                    <option value="1">星期一</option>
+                    <option value="2">星期二</option>
+                    <option value="3">星期三</option>
+                    <option value="4">星期四</option>
+                    <option value="5">星期五</option>
+                    <option value="6">星期六</option>
+                </select>
+                <button type="submit">Search Recurring</button>
+            </form>
+        </div>
+        <button onclick="useRouter(3)">Back</button>
+    </div>
+    `;
+			};
 			const auth = async (event) => {
-                if(event) {
-                    event.preventDefault()
-                }
+				if (event) {
+					event.preventDefault();
+				}
 				const codeInput = document.getElementById('code');
 				const codeValue = codeInput.value;
 
@@ -199,12 +219,10 @@
 					},
 					body: JSON.stringify(data),
 				});
-
-				if (resp.status === 200) {
-					useRouter(2);
-				} else if (resp.status === 400) {
+				if (resp.status === 401) {
 					useRouter(0);
 					localStorage.removeItem('token');
+					return;
 				}
 			};
 
@@ -227,12 +245,10 @@
 					},
 					body: JSON.stringify(data),
 				});
-
-				if (resp.status === 200) {
-					useRouter(2);
-				} else if (resp.status === 400) {
+				if (resp.status === 401) {
 					useRouter(0);
 					localStorage.removeItem('token');
+					return;
 				}
 			};
 
@@ -245,13 +261,36 @@
 					},
 					body: JSON.stringify({ id }),
 				});
-
-				if (resp.status === 200) {
-					useRouter(2);
-				} else if (resp.status === 400) {
+				if (resp.status === 401) {
 					useRouter(0);
 					localStorage.removeItem('token');
 				}
+			};
+			const searchDate = async (event) => {
+				event.preventDefault();
+				const data = {
+					year: parseInt(document.getElementById('year').value) ,
+					month:
+						parseInt(document.getElementById('month').value) ,
+					day: parseInt(document.getElementById('day').value) ,
+					weekday:
+						parseInt(document.getElementById('weekday').value) ,
+				};
+				const resp = await fetch('/schedule/browse', {
+					method:'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: localStorage.getItem('token') | '',
+					},
+					body: JSON.stringify(data),
+				});
+				if (resp.status === 401) {
+					localStorage.removeItem('token');
+					return;
+				}
+				const dates = await resp.json();
+				curPage += toBrowsePage(dates)|''
+				document.body.innerHTML = curPage
 			};
 		</script>
 	</body>

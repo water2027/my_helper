@@ -25,7 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		c.HTML(400, "schedule.html", nil)
+		c.HTML(403, "schedule.html", nil)
 		c.Abort()
 	}
 }
@@ -39,11 +39,11 @@ func (sp *SchedulePlugin) RegisterRoutes(r *gin.Engine) {
 	group.GET("/", func(c *gin.Context) {
 		c.HTML(200, "schedule.html", nil)
 	})
-	group.GET("/browse", c.Browse)
 	group.GET("/auth", func(c *gin.Context) {
 		c.JSON(200, nil)
 	})
-
+	
+	group.POST("/browse", c.Browse)
 	group.POST("/add_once", c.AddOnce)
 	group.POST("/add_long", c.AddLong)
 	
@@ -57,7 +57,7 @@ func (controller *Controller) AddOnce(c *gin.Context) {
 	err := controller.Service.AddOnce(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Content)
 	if err != nil {
 		log.Println(err)
-		c.JSON(400, gin.H{})
+		c.JSON(500, gin.H{})
 		return
 	}
 	c.JSON(200, gin.H{})
@@ -70,7 +70,7 @@ func (controller *Controller) AddLong(c *gin.Context) {
 	err := controller.Service.AddLong(date.Hour, date.Minute, date.Weekday, date.Content)
 	if err != nil {
 		log.Println(err)
-		c.JSON(400, gin.H{})
+		c.JSON(500, gin.H{})
 		return
 	}
 	c.JSON(200, gin.H{})
@@ -83,7 +83,7 @@ func (controller *Controller) DeleteTask(c *gin.Context) {
 	err := controller.Service.DeleteTask(date.Id)
 	if err != nil {
 		log.Println(err)
-		c.JSON(400, gin.H{})
+		c.JSON(500, gin.H{})
 		return
 	}
 	c.JSON(200, gin.H{})
@@ -91,7 +91,7 @@ func (controller *Controller) DeleteTask(c *gin.Context) {
 
 func (controller *Controller) Browse(c *gin.Context) {
 	var date Date
-	c.BindQuery(&date)
+	c.BindJSON(&date)
     // 从服务层获取所有任务
     tasks, err := controller.Service.GetAllTasks(date.Year, date.Month, date.Day, date.Weekday)
     if err != nil {
@@ -100,7 +100,5 @@ func (controller *Controller) Browse(c *gin.Context) {
         return
     }
     // 渲染浏览页面，并传递任务数据，假设模板位于 templates/schedule/browse.html
-    c.HTML(200, "schedule/browse.html", gin.H{
-        "Tasks": tasks,
-    })
+    c.JSON(200, tasks)
 }

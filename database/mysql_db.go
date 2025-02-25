@@ -3,9 +3,11 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
-	_ "github.com/go-sql-driver/mysql"
 	"sync"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -30,13 +32,16 @@ func initMysqlDB() error {
 		mysqlDB := os.Getenv("MYSQL_DB")
 
 		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", mysqlUser, mysqlPassword, mysqlHost, mysqlPort, mysqlDB)
+		log.Println(dsn)
 		db, err = sql.Open("mysql", dsn)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 
 		err = db.Ping()
 		if err != nil {
+			log.Println(err)
 			return
 		}
 		fmt.Println("成功连接到MySQL数据库")
