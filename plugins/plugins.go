@@ -1,21 +1,18 @@
 package plugins
 
 import (
-	"log"
 	"github.com/gin-gonic/gin"
-
 
 	"wx_assistant/router"
 )
 
-var handlers []Plugin
+var handlers []PluginHandlerOption
 
 type Plugin interface {
 	PluginRequired
 }
 
 type PluginRequired interface {
-	GetChan() chan string
 	Name() string
 }
 
@@ -24,34 +21,34 @@ type PluginRouteOption interface {
 }
 
 type PluginHandlerOption interface {
+	GetChan() chan string
 	InitHandler()
 }
 
 func verifyRegisterRoutes(p Plugin) bool {
 	_, ok := p.(PluginRouteOption)
-	return ok;
+	return ok
 }
 
 func verifyInitHandler(p Plugin) bool {
 	_, ok := p.(PluginHandlerOption)
-	return ok;
+	return ok
 }
 
-func RegisterPlugin(p Plugin){
-	handlers = append(handlers, p)
+func RegisterPlugin(p Plugin) {
 	if verifyInitHandler(p) {
-		log.Println("init handler")
-		go func(){
+		go func() {
 			p.(PluginHandlerOption).InitHandler()
+			handlers = append(handlers, p.(PluginHandlerOption))
 		}()
 	}
 	if verifyRegisterRoutes(p) {
-		go func(){
+		go func() {
 			p.(PluginRouteOption).RegisterRoutes(router.GetRouter())
 		}()
 	}
 }
 
-func GetHandlers() []Plugin {
+func GetHandlers() []PluginHandlerOption {
 	return handlers
 }

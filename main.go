@@ -18,9 +18,6 @@ func main() {
 	r := router.GetRouter()
 	r.LoadHTMLGlob("templates/**/*")
 	infoHandlers := plugins.GetHandlers()
-	for _, handler := range infoHandlers {
-		log.Println(handler.Name(), 1)
-	}
 	b := bot.NewBot(config.BotConfig.Webhook, infoHandlers)
 	go func() {
 		err := b.Run()

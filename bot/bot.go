@@ -11,7 +11,7 @@ import (
 
 type bot struct {
 	webhook      string
-	infoHandlers []plugins.Plugin
+	infoHandlers []plugins.PluginHandlerOption
 	messageChan  chan string
 	cancelFunc context.CancelFunc
 }
@@ -23,7 +23,7 @@ type BotHandler interface {
 	Stop()
 }
 
-func NewBot(webhook string, infoHandlers []plugins.Plugin) *bot {
+func NewBot(webhook string, infoHandlers []plugins.PluginHandlerOption) *bot {
 	return &bot{
 		webhook:      webhook,
 		infoHandlers: infoHandlers,
@@ -33,7 +33,7 @@ func NewBot(webhook string, infoHandlers []plugins.Plugin) *bot {
 
 func (b *bot) ReceiveMessage(ctx context.Context) {
 	for _, handler := range b.infoHandlers {
-		go func(ctx context.Context, handler plugins.Plugin) {
+		go func(ctx context.Context, handler plugins.PluginHandlerOption) {
 			c := handler.GetChan()
 			for {
 				select {
