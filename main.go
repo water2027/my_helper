@@ -14,7 +14,7 @@ import (
 
 	_ "wx_assistant/database"
 	_ "wx_assistant/plugins/schedule"
-	// _ "wx_assistant/plugins/sse"
+	_ "wx_assistant/plugins/weather"
 )
 
 func initLog() {

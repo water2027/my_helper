@@ -33,14 +33,10 @@ func (sp *SchedulePlugin) Name() string {
 }
 
 func (sp *SchedulePlugin) SetTask(date Date) {
-	now := time.Now()
-	year := now.Year()
-	month := now.Month()
-	day := now.Day()
 	go func() {
-		utils.SetOnceTask(func() {
+		utils.SetTodayTask(func() {
 			sp.ScheduleChan <- date.Content
-		}, year, month, day, date.Hour, date.Minute)
+		}, date.Hour, date.Minute)
 		database.DeleteValue(context.Background(), strconv.Itoa(date.Id))
 		if date.Weekday != -1 {
 			ss := NewScheduleService()
@@ -100,9 +96,9 @@ ProcessTasks:
 	for _, date := range dates {
 		database.SetValue(context.Background(), strconv.Itoa(date.Id), date.Content, time.Hour*24)
 		go func() {
-			utils.SetOnceTask(func() {
+			utils.SetTodayTask(func() {
 				sp.ScheduleChan <- date.Content
-			}, year, month, day, date.Hour, date.Minute)
+			}, date.Hour, date.Minute)
 			database.DeleteValue(context.Background(), strconv.Itoa(date.Id))
 			if date.Weekday != -1 {
 				ss.DeleteTask(date.Id)
@@ -113,17 +109,12 @@ ProcessTasks:
 
 func (sp *SchedulePlugin) Run() {
 	go func() {
-		loc, err := time.LoadLocation("Asia/Shanghai")
-		if err != nil {
-			log.Println("获取时区失败: " + err.Error())
-			return
-		}
 		c := cron.New(
 			cron.WithSeconds(),
-			cron.WithLocation(loc),
+			cron.WithLocation(time.Local),
 		)
 		spec := "0 0 0 * * *"
-		_, err = c.AddFunc(spec, sp.startDailyTask)
+		_, err := c.AddFunc(spec, sp.startDailyTask)
 		if err != nil {
 			panic("添加定时任务失败: " + err.Error())
 		}
