@@ -1,10 +1,12 @@
 package weather
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"github.com/robfig/cron/v3"
 	"time"
+
+	"github.com/robfig/cron/v3"
 
 	"wx_assistant/plugins"
 	"wx_assistant/utils"
@@ -55,7 +57,9 @@ func GetWeather(city string) Live {
 }
 
 func (wp *WeatherPlugin) SendMessage() {
-	
+	weather := GetWeather("珠海市香洲区")
+	weatherStr := fmt.Sprintf("珠海市香洲区天气: %s, 温度: %s℃, 风向: %s，风力: %s", weather.Weather, weather.Temperature, weather.WindDirection, weather.WindPower) 
+	wp.WeatherChan <- weatherStr
 }
 
 func (wp *WeatherPlugin) InitHandler() {
@@ -63,7 +67,7 @@ func (wp *WeatherPlugin) InitHandler() {
 		cron.WithSeconds(),
 		cron.WithLocation(time.Local),
 	)
-	spec := "0 0 0 * * *"
+	spec := "0 30 8 * * *"
 	_, err := c.AddFunc(spec, wp.SendMessage)
 	if err != nil {
 		panic("添加定时任务失败: " + err.Error())

@@ -21,7 +21,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # REDIS_PASSWORD: 
-
+      AI_KEY: asd
+      GAO_DE_KEY: asd
+      
   mysql:
     image: mysql:8.0
     environment:
