@@ -20,6 +20,7 @@ services:
       MYSQL_PORT: 3306
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      GO_ENV: docker
       # REDIS_PASSWORD: 
       AI_KEY: asd
       GAO_DE_KEY: asd
