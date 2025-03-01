@@ -23,6 +23,7 @@ services:
       # REDIS_PASSWORD: 
       AI_KEY: asd
       GAO_DE_KEY: asd
+      TZ: Asia/Shanghai
       
   mysql:
     image: mysql:8.0
