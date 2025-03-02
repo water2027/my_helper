@@ -56,3 +56,8 @@ type Building struct {
 	Name []string `json:"name"`
 	Type []string `json:"type"`
 }
+
+type WeatherConfig struct {
+	GaoDeKey string `yaml:"gao_de_key" json:"gao_de_key"`
+	UserCity string `yaml:"user_city" json:"user_city"`
+}

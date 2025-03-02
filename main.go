@@ -48,7 +48,7 @@ func main() {
 		r.Run(":8080")
 		select {}
 		}()
-	b := bot.NewBot(config.BotConfig.Webhook, infoHandlers)
+	b := bot.NewBot(config.MyConfig.BotConfig.Webhook, infoHandlers)
 	err := b.Run()
 	if err != nil {
 		log.Println(err)
