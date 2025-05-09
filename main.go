@@ -10,11 +10,6 @@ import (
 	"wx_assistant/bot"
 	"wx_assistant/config"
 	"wx_assistant/plugins"
-	"wx_assistant/router"
-
-	_ "wx_assistant/database"
-	_ "wx_assistant/plugins/schedule"
-	_ "wx_assistant/plugins/weather"
 )
 
 func initLog() {
@@ -41,13 +36,7 @@ func initLog() {
 func main() {
 	initLog()
 	config.InitConfig()
-	r := router.GetRouter()
-	r.LoadHTMLGlob("templates/**/*")
 	infoHandlers := plugins.GetHandlers()
-	go func() {
-		r.Run(":8080")
-		select {}
-		}()
 	b := bot.NewBot(config.MyConfig.BotConfig.Webhook, infoHandlers)
 	err := b.Run()
 	if err != nil {

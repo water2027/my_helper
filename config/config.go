@@ -12,14 +12,8 @@ type BotConfig struct {
 	Webhook string `yaml:"webhook" json:"webhook"`
 }
 
-type AiConfig struct {
-	BaseUrl    string `yaml:"base_url" json:"base_url"`
-	ApiKey string `yaml:"api_key" json:"api_key"`
-}
-
 type Config struct {
 	BotConfig BotConfig `yaml:"bot" json:"bot"`
-	AiConfig AiConfig `yaml:"ai" json:"ai"`
 }
 
 var MyConfig Config
