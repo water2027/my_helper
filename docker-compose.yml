@@ -22,8 +22,8 @@ services:
             REDIS_PORT: 6379
             GIN_MODE: release
             # REDIS_PASSWORD:
-            AI_KEY: { { AI_KEY } }
-            GAO_DE_KEY: { { GAO_DE_KEY } }
+            AI_KEY: ${ AI_KEY }
+            GAO_DE_KEY: ${ GAO_DE_KEY }
             TZ: Asia/Shanghai
 
     mysql:
