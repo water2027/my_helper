@@ -4,5 +4,3 @@
 .env
 
 *.log
-
-docker-compose.yml
