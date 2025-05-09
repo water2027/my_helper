@@ -7,9 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "wx_assistant/init"
+
 	"wx_assistant/bot"
 	"wx_assistant/config"
 	"wx_assistant/plugins"
+
+	_ "wx_assistant/plugins/sse"
 )
 
 func initLog() {
@@ -20,22 +24,18 @@ func initLog() {
 	}
 	log.SetOutput(logFile)
 
-	// 创建一个信号通道
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// 启动一个 goroutine 来监听信号
 	go func() {
 		sig := <-sigChan
 		log.Printf("接收到信号: %v", sig)
-		// 在这里可以添加其他清理操作
 		os.Exit(0)
 	}()
 }
 
 func main() {
 	initLog()
-	config.InitConfig()
 	infoHandlers := plugins.GetHandlers()
 	b := bot.NewBot(config.MyConfig.BotConfig.Webhook, infoHandlers)
 	err := b.Run()

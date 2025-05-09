@@ -33,3 +33,38 @@ func SetTodayTask(f func(), hour, minute int) {
 
 	<-ctx.Done()
 }
+
+func SetPeriodicTask(f func(), startYear int, startMonth time.Month,
+	startDay, startHour, startMinute int, interval time.Duration) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	targetTime := time.Date(startYear, startMonth, startDay, startHour, startMinute, 0, 0, time.Local)
+
+	now := time.Now()
+	if targetTime.Before(now) {
+		elapsed := now.Sub(targetTime)
+		intervals := elapsed / interval
+		targetTime = targetTime.Add(interval * (intervals + 1))
+	}
+
+	go func() {
+		for {
+			duration := time.Until(targetTime)
+			timer := time.NewTimer(duration)
+
+			select {
+			case <-timer.C:
+				f()
+				targetTime = targetTime.Add(interval)
+			case <-ctx.Done():
+				timer.Stop()
+				return
+			}
+		}
+	}()
+}
+
+func SetCycleTask(f func(), interval time.Duration) {
+	now := time.Now()
+	SetPeriodicTask(f, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), interval)
+}

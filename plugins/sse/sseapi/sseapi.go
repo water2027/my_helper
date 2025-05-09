@@ -1,11 +1,32 @@
 package sseapi
 
 import (
-	"net/http"
+	"encoding/json"
 	"io"
 	"log"
-	"encoding/json"
+	"net/http"
+	"os"
 )
+
+type SSEHelper struct {
+	Email     string
+	Password  string
+	Telephone string
+}
+
+func NewSSEHelper() *SSEHelper {
+	email := os.Getenv("SSE_EMAIL")
+	password := os.Getenv("SSE_PASSWORD")
+	telephone := os.Getenv("SSE_TELEPHONE")
+	if email == "" || password == "" || telephone == "" {
+		panic("SSE credentials not set in environment variables")
+	}
+	return &SSEHelper{
+		Email:     email,
+		Password:  password,
+		Telephone: telephone,
+	}
+}
 
 type loginResponse struct {
 	Code int `json:"code"`
@@ -36,14 +57,14 @@ type Post struct {
 	Tag           string `json:"Tag"`
 }
 
-func GetPosts() []Post {
+func (h *SSEHelper) GetPosts() []Post {
 	client := &http.Client{}
-	loginReq, err := loginSSEReq()
+	loginReq, err := loginSSEReq(h.Email, h.Password)
 	if err != nil {
 		log.Println(err)
 		return []Post{}
 	}
-	req, err := getPostsReq()
+	req, err := getPostsReq(h.Telephone)
 	if err != nil {
 		log.Println(err)
 		return []Post{}

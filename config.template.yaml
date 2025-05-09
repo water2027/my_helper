@@ -1,6 +1,2 @@
 bot:
   webhook: your_webhook_url
-
-ai:
-  api_key: your_api_key
-  base_url: your_base_url

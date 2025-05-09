@@ -90,5 +90,3 @@ func (b *bot) Run() error {
 func (b *bot) Stop() {
 	b.cancelFunc()
 }
-
-
