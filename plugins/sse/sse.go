@@ -12,25 +12,43 @@ import (
 	"wx_assistant/utils"
 )
 
+type timeStamp struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
 type SsePlugin struct {
 	PostChan      chan string
 	currentPostId int
 	recentPosts   []sseapi.Post
 	sseHelper     *sseapi.SSEHelper
+	timeMap       []timeStamp
+}
+
+func (pc *SsePlugin) setTask(lastTs, currentTs timeStamp) {
+	utils.SetPeriodicTask(func() {
+		now := time.Now()
+		lastTime := time.Date(now.Year(), now.Month(), now.Day(), lastTs.Hour, lastTs.Minute, 0, 0, time.Local)
+		if lastTime.After(now) {
+			lastTime = lastTime.Add(-24 * time.Hour)
+		}
+		msg := fmt.Sprintf("%d-%d-%d %d:00:00至%d-%d-%d %d:00:00\n\n", lastTime.Year(), lastTime.Month(), lastTime.Day(), lastTime.Hour(), now.Year(), now.Month(), now.Day(), now.Hour())
+		for _, post := range pc.recentPosts {
+			msg += fmt.Sprintf("\n\n%s\nhttps://ssemarket.cn/new/postdetail/%d\n\n", post.Title, post.PostID)
+		}
+		pc.PostChan <- msg
+		pc.recentPosts = []sseapi.Post{}
+	}, 2025, 5, 10, currentTs.Hour, currentTs.Minute, time.Hour*24)
 }
 
 // 可能存在并发问题，以后哪天需要了再改吧
 func (pc *SsePlugin) InitHandler() {
 	go func() {
-		fmt.Println("SSE插件开始获取最新帖子")
 		utils.SetCycleTask(func() {
-			fmt.Println("SSE插件开始获取最新帖子")
 			posts := pc.sseHelper.GetPosts()
 			slices.Reverse(posts)
 			for _, post := range posts {
 				id := post.PostID
-				fmt.Println("SSE插件获取到帖子ID:", id)
-				fmt.Println("SSE插件当前帖子ID:", pc.currentPostId)
 				if id <= pc.currentPostId {
 					continue
 				}
@@ -41,18 +59,14 @@ func (pc *SsePlugin) InitHandler() {
 			}
 		}, time.Minute*1)
 	}()
-	go func() {
-		utils.SetPeriodicTask(func() {
-			now := time.Now()
-			lastTime := now.Add(-time.Hour * 3)
-			msg := fmt.Sprintf("%d-%d-%d %d:00:00至%d-%d-%d %d:00:00\n\n", lastTime.Year(), lastTime.Month(), lastTime.Day(), lastTime.Hour(), now.Year(), now.Month(), now.Day(), now.Hour())
-			for _, post := range pc.recentPosts {
-				msg += fmt.Sprintf("\n\n%s\nhttps://ssemarket.cn/new/postdetail/%d\n\n", post.Title, post.PostID)
-			}
-			pc.PostChan <- msg
-			pc.recentPosts = []sseapi.Post{}
-		}, 2025, 5, 9, 7, 0, time.Hour*3)
-	}()
+	for i := range pc.timeMap {
+		if i == 0 {
+			go pc.setTask(pc.timeMap[len(pc.timeMap)-1], pc.timeMap[i])
+			continue
+		}
+		go pc.setTask(pc.timeMap[i-1], pc.timeMap[i])
+	}
+
 }
 
 func (pc *SsePlugin) Name() string {
@@ -66,7 +80,6 @@ func (pc *SsePlugin) GetChan() chan string {
 func init() {
 	env_id := os.Getenv("SSE_ID")
 
-	// env_id转换为int
 	id, err := strconv.Atoi(env_id)
 	if err != nil {
 		fmt.Println("SSE_ID环境变量转换为int失败:", err)
@@ -78,6 +91,12 @@ func init() {
 		sseHelper:     sseapi.NewSSEHelper(),
 		currentPostId: id,
 		recentPosts:   []sseapi.Post{},
+		timeMap: []timeStamp{
+			{Hour: 8, Minute: 0},
+			{Hour: 12, Minute: 0},
+			{Hour: 18, Minute: 0},
+			{Hour: 22, Minute: 0},
+		},
 	}
 	plugins.RegisterPlugin(sp)
 }

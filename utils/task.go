@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -52,9 +53,11 @@ func SetPeriodicTask(f func(), startYear int, startMonth time.Month,
 			timer := time.NewTimer(duration)
 			select {
 			case <-timer.C:
+				fmt.Println("Executing periodic task at:", targetTime)
 				f()
 				targetTime = targetTime.Add(interval)
 			case <-ctx.Done():
+				fmt.Println("Stopping periodic task at:", targetTime)
 				timer.Stop()
 				return
 			}
