@@ -7,37 +7,24 @@ import (
 	"strconv"
 	"time"
 
+	"wx_assistant/message"
 	"wx_assistant/plugins"
-	"wx_assistant/plugins/sse/sseapi"
+	"wx_assistant/plugins/sse/post"
 	"wx_assistant/utils"
 )
 
-type timeStamp struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
 type SsePlugin struct {
-	PostChan      chan string
+	PostChan      chan message.Message
 	currentPostId int
-	recentPosts   []sseapi.Post
-	sseHelper     *sseapi.SSEHelper
-	timeMap       []timeStamp
+	recentPosts   post.RecentPosts
+	sseHelper     *post.PostGenerator
+	timeMap       []post.TimeStamp
 }
 
-func (pc *SsePlugin) setTask(lastTs, currentTs timeStamp) {
+func (pc *SsePlugin) setTask(lastTs, currentTs post.TimeStamp) {
 	utils.SetPeriodicTask(func() {
-		now := time.Now()
-		lastTime := time.Date(now.Year(), now.Month(), now.Day(), lastTs.Hour, lastTs.Minute, 0, 0, time.Local)
-		if lastTime.After(now) {
-			lastTime = lastTime.Add(-24 * time.Hour)
-		}
-		msg := fmt.Sprintf("%d-%d-%d %d:00:00至%d-%d-%d %d:00:00\n\n", lastTime.Year(), lastTime.Month(), lastTime.Day(), lastTime.Hour(), now.Year(), now.Month(), now.Day(), now.Hour())
-		for _, post := range pc.recentPosts {
-			msg += fmt.Sprintf("\n\n%s\nhttps://ssemarket.cn/new/postdetail/%d\n\n", post.Title, post.PostID)
-		}
-		pc.PostChan <- msg
-		pc.recentPosts = []sseapi.Post{}
+		pc.recentPosts.SetLastTime(lastTs)
+		pc.PostChan <- &pc.recentPosts
 	}, 2025, 5, 10, currentTs.Hour, currentTs.Minute, time.Hour*24)
 }
 
@@ -47,15 +34,17 @@ func (pc *SsePlugin) InitHandler() {
 		utils.SetCycleTask(func() {
 			posts := pc.sseHelper.GetPosts()
 			slices.Reverse(posts)
-			for _, post := range posts {
-				id := post.PostID
+			for _, postItem := range posts {
+				id := postItem.PostID
 				if id <= pc.currentPostId {
 					continue
 				}
-				msg := fmt.Sprintf("%s\nhttps://ssemarket.cn/new/postdetail/%d", post.Title, id)
-				pc.PostChan <- msg
+				pc.PostChan <- &postItem
 				pc.currentPostId = id
-				pc.recentPosts = append(pc.recentPosts, post)
+				pc.recentPosts.AddPost(postItem)
+				p := postItem
+				p.Target = post.MarkdownPost
+				pc.PostChan <- &p
 			}
 		}, time.Minute*1)
 	}()
@@ -73,7 +62,7 @@ func (pc *SsePlugin) Name() string {
 	return "SSE"
 }
 
-func (pc *SsePlugin) GetChan() chan string {
+func (pc *SsePlugin) GetChan() chan message.Message {
 	return pc.PostChan
 }
 
@@ -87,15 +76,15 @@ func init() {
 	}
 
 	sp := &SsePlugin{
-		PostChan:      make(chan string),
-		sseHelper:     sseapi.NewSSEHelper(),
+		PostChan:      make(chan message.Message),
+		sseHelper:     post.NewGenerator(),
 		currentPostId: id,
-		recentPosts:   []sseapi.Post{},
-		timeMap: []timeStamp{
+		recentPosts:   *post.NewRecentPosts(),
+		timeMap: []post.TimeStamp{
 			{Hour: 8, Minute: 0},
 			{Hour: 12, Minute: 0},
 			{Hour: 18, Minute: 0},
-			{Hour: 22, Minute: 0},
+			{Hour: 22, Minute: 00},
 		},
 	}
 	plugins.RegisterPlugin(sp)

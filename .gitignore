@@ -1,5 +1,5 @@
-*.yaml
-!*.template.yaml
+config.json
+config.yaml
 
 .env
 

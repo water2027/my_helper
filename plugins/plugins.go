@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"log"
+	"wx_assistant/message"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +22,8 @@ type PluginRouteOption interface {
 }
 
 type PluginHandlerOption interface {
-	GetChan() chan string
+	GetChan() chan message.Message
 	InitHandler()
-}
-
-func verifyRegisterRoutes(p Plugin) bool {
-	_, ok := p.(PluginRouteOption)
-	return ok
 }
 
 func verifyInitHandler(p Plugin) bool {

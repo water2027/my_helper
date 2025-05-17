@@ -9,17 +9,18 @@ import (
 )
 
 type BotConfig struct {
+	Name	string `yaml:"name" json:"name"`
 	Webhook string `yaml:"webhook" json:"webhook"`
 }
 
 type Config struct {
-	BotConfig BotConfig `yaml:"bot" json:"bot"`
+	BotConfig []BotConfig `yaml:"bots" json:"bots"`
 }
 
 var MyConfig Config
 
 func InitConfig() {
-	file, err := os.Open("config.yaml")
+	file, err := os.Open("config.json")
 	if err != nil {
 		log.Println(err)
 		return

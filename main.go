@@ -37,7 +37,7 @@ func initLog() {
 func main() {
 	initLog()
 	infoHandlers := plugins.GetHandlers()
-	b := bot.NewBot(config.MyConfig.BotConfig.Webhook, infoHandlers)
+	b := bot.NewBotCenter(config.MyConfig.BotConfig, infoHandlers)
 	err := b.Run()
 	if err != nil {
 		log.Println(err)

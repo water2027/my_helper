@@ -1,0 +1,12 @@
+{
+	"bots": [
+        {
+            "name":"raw",
+            "webhook":"asd"
+        },
+        {
+            "name":"markdown",
+            "webhook":"asd"
+        }
+    ]
+}
