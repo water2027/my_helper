@@ -2,7 +2,6 @@ package bot
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"wx_assistant/config"
@@ -22,8 +21,6 @@ func NewBotCenter(bots []config.BotConfig, infoHandlers []plugins.PluginHandlerO
 	for _, botConfig := range bots {
 		_bot := newBot(botConfig.Name, botConfig.Webhook)
 		botsMap[botConfig.Name] = _bot
-		fmt.Println("bot name: ", botConfig.Name)
-		fmt.Println("bot webhook: ", botConfig.Webhook)
 	}
 	return &botCenter{
 		bots:         botsMap,
