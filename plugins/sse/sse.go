@@ -5,6 +5,7 @@ import (
 	"os"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"wx_assistant/message"
@@ -38,6 +39,9 @@ func (pc *SsePlugin) InitHandler() {
 				id := postItem.PostID
 				if id <= pc.currentPostId {
 					continue
+				}
+				if strings.HasPrefix(postItem.Title, "test") {
+					continue // 跳过测试用的post
 				}
 				pc.PostChan <- &postItem
 				pc.currentPostId = id
