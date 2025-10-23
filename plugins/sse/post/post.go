@@ -30,14 +30,21 @@ func NewGenerator() *PostGenerator {
 	}
 }
 
-func (h *PostGenerator) GetPosts() []Post {
+func GetPosts() []Post {
 	client := &http.Client{}
-	loginReq, err := sseapi.LoginSSEReq(h.Email, h.Password)
+	loginReq, err := loginSSEReq()
 	if err != nil {
 		log.Println(err)
 		return []Post{}
 	}
-	req, err := sseapi.GetPostsReq(h.Telephone)
+	req, err := getPostsReq()
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+
+	ratingreq, err := getRatingPostsReq()
+
 	if err != nil {
 		log.Println(err)
 		return []Post{}
@@ -49,7 +56,7 @@ func (h *PostGenerator) GetPosts() []Post {
 		return []Post{}
 	}
 
-	var loginResponse sseapi.LoginResponse
+	var loginResponse loginResponse
 
 	body, _ := io.ReadAll(loginResp.Body)
 	err = json.Unmarshal(body, &loginResponse)
@@ -64,6 +71,7 @@ func (h *PostGenerator) GetPosts() []Post {
 	}
 	// 将token添加到第二个请求的header中
 	req.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
+	ratingreq.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
 
 	defer loginResp.Body.Close()
 
@@ -74,6 +82,13 @@ func (h *PostGenerator) GetPosts() []Post {
 	}
 	defer resp.Body.Close()
 
+	ratingresp, err := client.Do(ratingreq)
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+	defer ratingresp.Body.Close()
+
 	var posts []Post
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
@@ -81,6 +96,16 @@ func (h *PostGenerator) GetPosts() []Post {
 		return []Post{}
 	}
 	json.Unmarshal(body, &posts)
+
+	body, err = io.ReadAll(ratingresp.Body)
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+	var ratingposts []Post
+	json.Unmarshal(body, &ratingposts)
+
+	posts = append(posts, ratingposts...)
 	return posts
 }
 
