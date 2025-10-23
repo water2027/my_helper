@@ -43,6 +43,13 @@ func (h *PostGenerator) GetPosts() []Post {
 		return []Post{}
 	}
 
+	ratingreq, err := sseapi.GetRatingPostsReq(h.Telephone)
+
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+
 	loginResp, err := client.Do(loginReq)
 	if err != nil {
 		log.Println(err)
@@ -64,6 +71,7 @@ func (h *PostGenerator) GetPosts() []Post {
 	}
 	// 将token添加到第二个请求的header中
 	req.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
+	ratingreq.Header.Add("Authorization", "Bearer "+loginResponse.Data.Token)
 
 	defer loginResp.Body.Close()
 
@@ -81,6 +89,24 @@ func (h *PostGenerator) GetPosts() []Post {
 		return []Post{}
 	}
 	json.Unmarshal(body, &posts)
+
+	ratingresp, err := client.Do(ratingreq)
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+	defer ratingresp.Body.Close()
+
+	body, err = io.ReadAll(ratingresp.Body)
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+	var ratingposts []Post
+	json.Unmarshal(body, &ratingposts)
+
+	posts = append(posts, ratingposts...)
+
 	return posts
 }
 

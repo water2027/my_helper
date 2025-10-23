@@ -30,3 +30,15 @@ func GetPostsReq(telephone string) (*http.Request, error) {
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
+
+func GetRatingPostsReq(telephone string) (*http.Request, error) {
+	//get posts
+	getPostsData := fmt.Sprintf(`{"limit":5,"offset":0,"partition":"打分","searchsort":"rating","userTelephone":"%s"}`, telephone)
+	req, err := http.NewRequest("POST", "https://ssemarket.cn/api/auth/browse", bytes.NewBuffer([]byte(getPostsData)))
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
