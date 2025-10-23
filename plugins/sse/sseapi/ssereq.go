@@ -31,9 +31,9 @@ func GetPostsReq(telephone string) (*http.Request, error) {
 	return req, nil
 }
 
-func getRatingPostsReq() (*http.Request, error) {
+func GetRatingPostsReq(telephone string) (*http.Request, error) {
 	//get posts
-	getPostsData := fmt.Sprintf(`{"limit":5,"offset":0,"partition":"打分","searchsort":"rating","userTelephone":"%s"}`, "123")
+	getPostsData := fmt.Sprintf(`{"limit":5,"offset":0,"partition":"打分","searchsort":"rating","userTelephone":"%s"}`, telephone)
 	req, err := http.NewRequest("POST", "https://ssemarket.cn/api/auth/browse", bytes.NewBuffer([]byte(getPostsData)))
 	if err != nil {
 		log.Println(err)

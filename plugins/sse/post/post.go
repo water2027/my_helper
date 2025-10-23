@@ -30,20 +30,20 @@ func NewGenerator() *PostGenerator {
 	}
 }
 
-func GetPosts() []Post {
+func (h *PostGenerator) GetPosts() []Post {
 	client := &http.Client{}
-	loginReq, err := loginSSEReq()
+	loginReq, err := sseapi.LoginSSEReq(h.Email, h.Password)
 	if err != nil {
 		log.Println(err)
 		return []Post{}
 	}
-	req, err := getPostsReq()
+	req, err := sseapi.GetPostsReq(h.Telephone)
 	if err != nil {
 		log.Println(err)
 		return []Post{}
 	}
 
-	ratingreq, err := getRatingPostsReq()
+	ratingreq, err := sseapi.GetRatingPostsReq(h.Telephone)
 
 	if err != nil {
 		log.Println(err)
@@ -56,7 +56,7 @@ func GetPosts() []Post {
 		return []Post{}
 	}
 
-	var loginResponse loginResponse
+	var loginResponse sseapi.LoginResponse
 
 	body, _ := io.ReadAll(loginResp.Body)
 	err = json.Unmarshal(body, &loginResponse)
@@ -82,13 +82,6 @@ func GetPosts() []Post {
 	}
 	defer resp.Body.Close()
 
-	ratingresp, err := client.Do(ratingreq)
-	if err != nil {
-		log.Println(err)
-		return []Post{}
-	}
-	defer ratingresp.Body.Close()
-
 	var posts []Post
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
@@ -96,6 +89,13 @@ func GetPosts() []Post {
 		return []Post{}
 	}
 	json.Unmarshal(body, &posts)
+
+	ratingresp, err := client.Do(ratingreq)
+	if err != nil {
+		log.Println(err)
+		return []Post{}
+	}
+	defer ratingresp.Body.Close()
 
 	body, err = io.ReadAll(ratingresp.Body)
 	if err != nil {
@@ -106,6 +106,7 @@ func GetPosts() []Post {
 	json.Unmarshal(body, &ratingposts)
 
 	posts = append(posts, ratingposts...)
+
 	return posts
 }
 
